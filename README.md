@@ -32,7 +32,6 @@ The application follows a model where `Main.java` acts as the controller/menu,
 |`Utility.java`|Core logic. Manages the static list of `Loop` objects, handles file reading/writing, and calculates totals/averages.|
 |`Loop.java`|Domain model. Represents a single caddying session (Name, Date, Money).|
 |`Date.java`|Helper class. Encapsulates year, month, and day for formatting purposes.|
-|`File.java`|Stub/Placeholder. Currently empty; actual file operations are moved to `Utility.java`.|
 
 ## Getting Started
 
