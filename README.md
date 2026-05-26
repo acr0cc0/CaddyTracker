@@ -64,18 +64,6 @@ The application follows a model where `Main.java` acts as the controller/menu,
 
 I want to implement a GUI to elevate the production value and make the application more user friendly. I also want to add more features such as; average money paid per person, weekly rolling average among other things. I also want to use a more secure storage solution, such as a database, for saving loop information.
 
-## Usage Guide
-
-Upon running the application, you will be presented with a numeric menu:
-
-|Option|Action|Description|
-|---|---|---|
-|0|Quit|Exits the application.|
-|1|Add Loop|Prompts for Name, Money, and Date. Automatically saves to file.|
-|2|Display List|Shows all stored caddying sessions and their details.|
-|3|Total Money|Calculates and displays the sum of all earnings.|
-|4|Average Money|Calculates the mean earnings per session.|
-
 ## Data Storage
 
 The application uses a file named `loops.txt` to persist data.
