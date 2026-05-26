@@ -1,72 +1,158 @@
-import java.util.Scanner;
+import java.awt.*;
+import java.util.List;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
-public class Main {
-    // private static final ArrayList<Loop> list = new ArrayList<>();
-    @SuppressWarnings("ConvertToTryWithResources")
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        Scanner text = new Scanner(System.in);
-        boolean running = true;
+public class Main extends JFrame {
+    private final JTextField dateField = new JTextField(10);
+    private final JTextField moneyField = new JTextField(10);
+    private final JTextField nameField = new JTextField(15);
 
-        // Display the main menu
-        Utility.displayMenu();
+    private final JLabel totalLabel = new JLabel("Total: $0");
+    private final JLabel averageLabel = new JLabel("Average: $0.00");
 
-        // Process user input
-        while (running) {
-            System.out.print("\nEnter your choice: ");
-            int choice = scanner.nextInt();
+    private final DefaultTableModel tableModel = new DefaultTableModel(
+            new Object[]{"Name", "Date", "Money"}, 0
+    );
 
-            
-            switch (choice) {
-                case 0: // Check for the quit option
-                    running = false;
-                    System.out.println("Goodbye!");
-                    break;
-                case 1: // add loops to list
-                    System.out.println("Adding loops...\n");
-                    boolean cont = true;
-                    while (cont) {
-                        Utility.addLoop();
-                        // Utility.writeFile(l);
-                        System.out.print("\nLoop added!\n\nAdd another? y/n\t");
-                        String x = text.nextLine();
-                        if (x.equals("n")) { 
-                            cont = false;
-                            break;
-                        }
-                    }
-                    // displayMenu();
-                    break;
-                case 2: // read file + print loops
-                    System.out.println("Printing loops...\n");
-                    // read file 
-                    Utility.printList();
-                    // displayMenu();
-                    break;
-                case 3: // display total money made
-                    System.out.println("Total money");
-                    System.out.println("\nYou made $" + Utility.totalMoney() + " so far this summer");
-                    // displayMenu();
-                    break;
-                case 4: // display avg per loop
-                    System.out.println("Average money per loop");
-                    System.out.println("\nYou are averaging $" + Utility.summerAverage() + " so far this summer");
-                    // displayMenu();
-                    break;
-                default: // handle misinput
-                    System.out.println("Invalid choice.");
-                    // displayMenu();
-                    break;
+    public Main() {
+        super("Caddy Tracker");
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout(10, 10));
+
+        Utility.loadLoops();
+
+        add(buildInputPanel(), BorderLayout.NORTH);
+        add(buildTablePanel(), BorderLayout.CENTER);
+        add(buildSummaryPanel(), BorderLayout.SOUTH);
+
+        refreshTable();
+
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    private JPanel buildInputPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Add Loop"));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.insets = new Insets(5, 5, 5, 5);
+        c.fill = GridBagConstraints.HORIZONTAL;
+
+        c.gridx = 0;
+        c.gridy = 0;
+        panel.add(new JLabel("Date (yyyy-mm-dd):"), c);
+
+        c.gridx = 1;
+        panel.add(dateField, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        panel.add(new JLabel("Money earned:"), c);
+
+        c.gridx = 1;
+        panel.add(moneyField, c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        panel.add(new JLabel("Name:"), c);
+
+        c.gridx = 1;
+        panel.add(nameField, c);
+
+        JButton addButton = new JButton("Add Loop");
+        addButton.addActionListener(e -> addLoopFromForm());
+
+        c.gridx = 0;
+        c.gridy = 3;
+        c.gridwidth = 2;
+        panel.add(addButton, c);
+
+        getRootPane().setDefaultButton(addButton);
+
+        return panel;
+    }
+
+    private JScrollPane buildTablePanel() {
+        JTable table = new JTable(tableModel);
+        table.setFillsViewportHeight(true);
+        return new JScrollPane(table);
+    }
+
+    private JPanel buildSummaryPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panel.add(totalLabel);
+        panel.add(Box.createHorizontalStrut(20));
+        panel.add(averageLabel);
+        return panel;
+    }
+
+    private void addLoopFromForm() {
+        try {
+            String[] parts = dateField.getText().trim().split("-");
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Use date format yyyy-mm-dd.");
             }
 
-            // Clear input buffer after reading integers
-            scanner.nextLine();
-            // text.nextLine();
+            int year = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int day = Integer.parseInt(parts[2]);
+            int money = Integer.parseInt(moneyField.getText().trim());
+            String name = nameField.getText().trim();
+
+            if (name.isEmpty()) {
+                throw new IllegalArgumentException("Name cannot be blank.");
+            }
+
+            Loop loop = new Loop(new Date(year, month, day), money, name);
+            Utility.addLoop(loop);
+
+            clearForm();
+            refreshTable();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Money, year, month, and day must be numbers.",
+                    "Invalid Input",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    ex.getMessage(),
+                    "Invalid Input",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void clearForm() {
+        dateField.setText("");
+        moneyField.setText("");
+        nameField.setText("");
+        dateField.requestFocus();
+    }
+
+    private void refreshTable() {
+        tableModel.setRowCount(0);
+
+        List<Loop> loops = Utility.getLoops();
+        for (Loop loop : loops) {
+            tableModel.addRow(new Object[]{
+                    loop.getName(),
+                    loop.getDate(),
+                    "$" + loop.getMoney()
+            });
         }
 
-        scanner.close();
-        // text.close();
-    } // end main method
+        totalLabel.setText("Total: $" + Utility.totalMoney());
+        averageLabel.setText(String.format("Average: $%.2f", Utility.summerAverage()));
+    }
 
-    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(Main::new);
+    }
 }
